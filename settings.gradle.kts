@@ -8,3 +8,4 @@ pluginManagement {
 }
 
 include("namelayer-spigot")
+include("namelayer-bungee")
