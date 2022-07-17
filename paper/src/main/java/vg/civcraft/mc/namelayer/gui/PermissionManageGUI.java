@@ -118,8 +118,8 @@ public class PermissionManageGUI extends AbstractGroupGUI {
 			ItemStack is = null;
 			Clickable c;
 			final boolean hasPerm = gp.hasPermission(pType, perm);
-			boolean canEdit = gm.hasAccess(g, p.getUniqueId(),
-					PermissionType.getPermission("PERMS"));
+			boolean canEdit = gm.hasAccess(g, p.getUniqueId(), PermissionType.getPermission("PERMS"))
+					|| g.getOwner().equals(p.getUniqueId());
 
 			if (hasPerm) {
 				is = yesStack();
@@ -170,8 +170,8 @@ public class PermissionManageGUI extends AbstractGroupGUI {
 					@Override
 					public void clicked(Player arg0) {
 						if (hasPerm == gp.hasPermission(pType, perm)) { // recheck
-							if (gm.hasAccess(g, p.getUniqueId(),
-									PermissionType.getPermission("PERMS"))) {
+							if (gm.hasAccess(g, p.getUniqueId(), PermissionType.getPermission("PERMS"))
+									|| g.getOwner().equals(p.getUniqueId())) {
 								NameLayerPlugin.log(Level.INFO, p.getName()
 										+ (hasPerm ? " removed " : " added ")
 										+ "the permission " + perm.getName()
