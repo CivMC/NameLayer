@@ -246,6 +246,8 @@ public class AdminFunctionsGUI extends AbstractGroupGUI {
 					p.sendMessage(ChatColor.GREEN + "Group is now disciplined."
 							+ " Check back later to see if group is deleted.");
 				}
+
+				p.closeInventory();
 			}
 		}, 11);
 		confirmInv.setSlot(new Clickable(no) {

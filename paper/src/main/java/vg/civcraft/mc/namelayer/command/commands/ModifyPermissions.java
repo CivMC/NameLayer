@@ -80,14 +80,14 @@ public class ModifyPermissions extends BaseCommandMiddle {
 					sender.sendMessage(ChatColor.RED + "You can't explicitly add players to this group. Per default any non blacklisted person will"
 							+ "be included in this permission group");
 				}
-				gPerm.addPermission(playerType, pType);
+				gPerm.addPermission(playerType, pType, true, p);
 				sender.sendMessage(ChatColor.GREEN + "The PermissionType: " + pType.getName() + " was successfully added to the PlayerType: " +
 						playerType.name());
 			}
 		}
 		else if (info.equalsIgnoreCase("remove")){
 			if (gPerm.hasPermission(playerType, pType)){
-				gPerm.removePermission(playerType, pType);
+				gPerm.removePermission(playerType, pType, true, p);
 				sender.sendMessage(ChatColor.GREEN + "The PermissionType: " + pType.getName() + " was successfully removed from" +
 						" the PlayerType: " + playerType.name());
 			}
