@@ -178,9 +178,9 @@ public class PermissionManageGUI extends AbstractGroupGUI {
 										+ "for player type " + pType.toString()
 										+ " for " + g.getName() + " via the gui");
 								if (hasPerm) {
-									gp.removePermission(pType, perm);
+									gp.removePermission(pType, perm, true, arg0);
 								} else {
-									gp.addPermission(pType, perm);
+									gp.addPermission(pType, perm, true, arg0);
 								}
 							}
 						} else {

@@ -4,9 +4,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import org.bukkit.entity.Player;
 import vg.civcraft.mc.namelayer.GroupManager.PlayerType;
 import vg.civcraft.mc.namelayer.NameLayerPlugin;
 import vg.civcraft.mc.namelayer.database.GroupManagerDao;
+import vg.civcraft.mc.namelayer.events.GroupPermissionChangeEvent;
 import vg.civcraft.mc.namelayer.group.Group;
 
 public class GroupPermission {
@@ -73,15 +76,28 @@ public class GroupPermission {
 	}
 
 	public boolean addPermission(PlayerType pType, PermissionType permType, boolean savetodb) {
+		return addPermission(pType, permType, savetodb, null);
+	}
+
+	public boolean addPermission(PlayerType pType, PermissionType permType, boolean savetodb, Player changer){
 		List<PermissionType> playerPerms = perms.get(pType);
 		if (playerPerms == null || playerPerms.contains(permType)) {
 			return false;
 		}
-		playerPerms.add(permType);
-		if (savetodb) {
-			db.addPermission(group.getName(), pType.name(), Collections.singletonList(permType));
+		GroupPermissionChangeEvent gpce = new GroupPermissionChangeEvent(
+				this.group,
+				pType,
+				permType,
+				GroupPermissionChangeEvent.ChangeType.ADD,
+				changer);
+		if(gpce.callEvent()) {
+			playerPerms.add(permType);
+			if (savetodb) {
+				db.addPermission(group.getName(), pType.name(), Collections.singletonList(permType));
+			}
+			return true;
 		}
-		return true;
+		return false;
 	}
 
 	/**
@@ -95,15 +111,30 @@ public class GroupPermission {
 	}
 	
 	public boolean removePermission(PlayerType pType, PermissionType permType, boolean savetodb) {
+		return removePermission(pType, permType, savetodb, null);
+	}
+
+	public boolean removePermission(PlayerType pType, PermissionType permType, boolean savetodb, Player changer) {
 		List<PermissionType> playerPerms = perms.get(pType);
 		if (playerPerms == null || !playerPerms.contains(permType)) {
 			return false;
 		}
-		playerPerms.remove(permType);
-		if (savetodb) {
-			db.removePermissionAsync(group.getName(), pType, permType);
+
+		GroupPermissionChangeEvent gpce = new GroupPermissionChangeEvent(
+				this.group,
+				pType,
+				permType,
+				GroupPermissionChangeEvent.ChangeType.REMOVE,
+				changer);
+
+		if(gpce.callEvent()) {
+			playerPerms.remove(permType);
+			if (savetodb) {
+				db.removePermissionAsync(group.getName(), pType, permType);
+			}
+			return true;
 		}
-		return true;
+		return false;
 	}
 
 	/**
