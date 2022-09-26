@@ -559,7 +559,18 @@ public class Group {
 			db.setFounder(uuid, this);
 		}
 	}
-	
+
+	public void setName(String name) {
+		setName(name, true);
+	}
+
+	public void setName(String name, boolean saveToDB) {
+		if (saveToDB) {
+			db.setNewGroupName(this.name, name);
+		}
+		this.name = name;
+	}
+
 	public void setDisciplined(boolean value){
 		setDisciplined(value, true);
 	}
