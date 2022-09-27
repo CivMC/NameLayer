@@ -1323,12 +1323,12 @@ public class GroupManagerDao {
 
 	public void setNewGroupName(String oldGroupName, String newGroupName) {
 		try (Connection connection = db.getConnection();
-			 PreparedStatement updateOwner = connection.prepareStatement(GroupManagerDao.updateGroupName);){
-			updateOwner.setString(1, newGroupName);
-			updateOwner.setString(2, newGroupName);
-			updateOwner.setString(3, oldGroupName);
-			updateOwner.setString(4, oldGroupName);
-			updateOwner.executeUpdate();
+			 PreparedStatement updateName = connection.prepareStatement(GroupManagerDao.updateGroupName);){
+			updateName.setString(1, newGroupName);
+			updateName.setString(2, newGroupName);
+			updateName.setString(3, oldGroupName);
+			updateName.setString(4, oldGroupName);
+			updateName.executeUpdate();
 		} catch (SQLException e) {
 			logger.log(Level.WARNING, "Problem setting new name of group " + oldGroupName + " to " + newGroupName, e);
 		}

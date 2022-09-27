@@ -43,18 +43,19 @@ public class RenameGroup extends BaseCommandMiddle {
 		if (!(sender instanceof Player player)) {
 			//We are console here
 			targetGroup.setName(newGroupName, true);
-			sender.sendMessage(Component.text("We have changed the group " + currentGroup + " to " + newGroupName, NamedTextColor.GREEN));
+			sender.sendMessage(Component.text("You have changed the group " + currentGroup + " to " + newGroupName, NamedTextColor.GREEN));
 			return;
 		}
 		boolean hasPerm = NameAPI.getGroupManager().hasAccess(targetGroup, player.getUniqueId(), PermissionType.getPermission("OWNER"));
 		if (!hasPerm) {
-			player.sendMessage(Component.text("You do not have the adequate permission to change this groups name!", NamedTextColor.RED));
+			player.sendMessage(Component.text("You do not have the adequate permission to change this group's name!", NamedTextColor.RED));
 			return;
 		}
 		//We do have permission here
 		GroupManager.invalidateCache(targetGroup.getName());
 		targetGroup.setName(newGroupName);
+		//We use getGroup here to force the group to be reloaded and readded to the cache. We removed it above here using invalidateCache.
 		GroupManager.getGroup(targetGroup.getName());
-		player.sendMessage(Component.text("We have changed the group " + currentGroup + " to " + newGroupName, NamedTextColor.GREEN));
+		player.sendMessage(Component.text("You have changed the group's name from " + currentGroup + " to " + newGroupName, NamedTextColor.GREEN));
 	}
 }
