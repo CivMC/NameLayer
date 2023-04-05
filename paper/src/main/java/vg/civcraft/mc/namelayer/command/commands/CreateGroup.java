@@ -10,6 +10,7 @@ import java.util.UUID;
 import java.util.logging.Level;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import vg.civcraft.mc.namelayer.GroupManager;
 import vg.civcraft.mc.namelayer.NameAPI;
@@ -34,27 +35,9 @@ public class CreateGroup extends BaseCommandMiddle {
 		}
 		
 		//enforce regulations on the name
-		if (name.length() > 32) {
-			p.sendMessage(ChatColor.RED + "The group name is not allowed to contain more than 32 characters");
-			return;
-		}
-		Charset latin1 = StandardCharsets.ISO_8859_1;
-		boolean invalidChars = false;
-		if (!latin1.newEncoder().canEncode(name)) {
-			invalidChars = true;
-		}
-		//cant allow them to hurt mercury :(
-		if (name.contains("|")) {
-			invalidChars = true;
-		}
+		boolean validName = validateGroupName(p, name);
 		
-		for(char c:name.toCharArray()) {
-			if (Character.isISOControl(c)) {
-				invalidChars = true;
-			}
-		}
-		
-		if(invalidChars) {
+		if(!validName) {
 			p.sendMessage(ChatColor.RED + "You used characters, which are not allowed");
 			return;
 		}
@@ -92,5 +75,34 @@ public class CreateGroup extends BaseCommandMiddle {
 			p.sendMessage(ChatColor.YELLOW + "You have reached the group limit with " + NameLayerPlugin.getInstance().getGroupLimit() + " groups! Please delete un-needed groups if you wish to create more.");
 		}
 		p.sendMessage(ChatColor.GREEN + "Group creation request is in process.");
+	}
+
+	/**
+	 * Returns if the group name was validated successfully
+	 * @param sender Player or console
+	 * @param groupName Group name to validate
+	 * @return True if the group name is fine, false if it violated any of our constraints
+	 */
+	public static boolean validateGroupName(CommandSender sender, String groupName) {
+		if (groupName.length() > 32) {
+			sender.sendMessage(ChatColor.RED + "The group name is not allowed to contain more than 32 characters");
+			return false;
+		}
+		Charset latin1 = StandardCharsets.ISO_8859_1;
+		boolean invalidCharacters = false;
+		if (!latin1.newEncoder().canEncode(groupName)) {
+			invalidCharacters = true;
+		}
+		//cant allow them to hurt mercury :(
+		if (groupName.contains("|")) {
+			invalidCharacters = true;
+		}
+
+		for(char c:groupName.toCharArray()) {
+			if (Character.isISOControl(c)) {
+				invalidCharacters = true;
+			}
+		}
+		return !invalidCharacters;
 	}
 }

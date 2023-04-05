@@ -109,7 +109,10 @@ public class GroupManagerDao {
 		
 	private static final String updateOwner = "update faction set founder = ? "
 				+ "where group_name = ?";
-		
+
+	private static final String updateGroupName = "update faction, faction_id set faction.group_name = ?, faction_id.group_name = ? " +
+			"where faction.group_name = ? AND faction_id.group_name = ?;";
+
 	private static final String updateDisciplined = "update faction set discipline_flags = ? "
 				+ "where group_name = ?";
 		
@@ -1316,6 +1319,23 @@ public class GroupManagerDao {
 			logger.log(Level.WARNING, "Problem getting all default groups " , e);
 		}
 		return groups;
+	}
+
+	public void setNewGroupName(String oldGroupName, String newGroupName) {
+		try (Connection connection = db.getConnection();
+			 PreparedStatement updateName = connection.prepareStatement(GroupManagerDao.updateGroupName);){
+			updateName.setString(1, newGroupName);
+			updateName.setString(2, newGroupName);
+			updateName.setString(3, oldGroupName);
+			updateName.setString(4, oldGroupName);
+			updateName.executeUpdate();
+		} catch (SQLException e) {
+			logger.log(Level.WARNING, "Problem setting new name of group " + oldGroupName + " to " + newGroupName, e);
+		}
+	}
+
+	public void setNewGroupNameAsync(String oldGroupName, String newGroupName) {
+		plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> setNewGroupName(oldGroupName, newGroupName));
 	}
 	
 	/**

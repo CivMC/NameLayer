@@ -54,6 +54,7 @@ public class CommandHandler extends CommandManager{
 		registerCommand(new RemoveBlacklist());
 		registerCommand(new ShowBlacklist());
 		registerCommand(new NameLayerGroupGui());
+		registerCommand(new RenameGroup());
 	}
 
 	@Override
