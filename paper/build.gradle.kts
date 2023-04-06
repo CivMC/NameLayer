@@ -11,7 +11,7 @@ civGradle {
 }
 
 dependencies {
-	paperDevBundle("1.18.2-R0.1-SNAPSHOT")
+	paperDevBundle("1.19.4-R0.1-SNAPSHOT")
 
-	compileOnly("net.civmc.civmodcore:paper:2.0.0-SNAPSHOT:dev-all")
+	compileOnly("net.civmc.civmodcore:civmodcore-paper:2.3.5:dev-all")
 }
