@@ -14,7 +14,7 @@ gradle.buildFinished {
 
 allprojects {
 	group = "net.civmc.namelayer"
-	version = "3.1.0"
+	version = "3.0.0-SNAPSHOT"
 	description = "NameLayer"
 }
 
