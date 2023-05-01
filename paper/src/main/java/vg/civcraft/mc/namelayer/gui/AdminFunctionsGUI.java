@@ -239,7 +239,7 @@ public class AdminFunctionsGUI extends AbstractGroupGUI {
 				}
 				NameLayerPlugin.log(Level.INFO,
 						p.getName() + " deleted " + g.getName() + " via the gui");
-				if (gm.deleteGroup(g.getName())) {
+				if (gm.deleteGroup(g.getGroupId())) {
 					p.sendMessage(ChatColor.GREEN + g.getName()
 							+ " was successfully deleted.");
 				} else {
