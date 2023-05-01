@@ -46,7 +46,7 @@ public class DeleteGroup extends BaseCommandMiddle {
 				if(now.getTime() < Long.parseLong(entry[1]))
 				{
 					//good to go delete the group
-					if(gm.deleteGroup(gD.getName()))
+					if(gm.deleteGroup(gD.getGroupId()))
 						p.sendMessage(ChatColor.GREEN + "Group was successfully deleted.");
 					else
 						p.sendMessage(ChatColor.GREEN + "Group is now disciplined."

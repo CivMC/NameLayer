@@ -21,7 +21,7 @@ public class GroupPermission {
 	}
 	
 	private void loadPermsforGroup(){
-		perms = db.getPermissions(group.getName());
+		perms = db.getPermissions(group.getGroupId());
 		//to save ourselves from trouble later, we ensure that every perm type has at least an empty list
 		for(PlayerType pType : PlayerType.values()) {
 			perms.computeIfAbsent(pType, k -> new ArrayList<>());
@@ -79,7 +79,7 @@ public class GroupPermission {
 		}
 		playerPerms.add(permType);
 		if (savetodb) {
-			db.addPermission(group.getName(), pType.name(), Collections.singletonList(permType));
+			db.addPermission(group.getGroupId(), pType.name(), Collections.singletonList(permType));
 		}
 		return true;
 	}
@@ -101,7 +101,7 @@ public class GroupPermission {
 		}
 		playerPerms.remove(permType);
 		if (savetodb) {
-			db.removePermissionAsync(group.getName(), pType, permType);
+			db.removePermissionAsync(group.getGroupId(), pType, permType);
 		}
 		return true;
 	}

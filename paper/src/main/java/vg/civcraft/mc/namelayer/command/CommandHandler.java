@@ -34,7 +34,9 @@ public class CommandHandler extends CommandManager{
 		registerCommand(new ListGroups());
 		registerCommand(new ListMembers());
 		registerCommand(new ListPermissions());
-		//addCommands(new MergeGroups("MergeGroups")); Disabled as it's currently semi broken
+		registerCommand(new MergeGroups());
+		registerCommand(new LinkGroups());
+		registerCommand(new UnlinkGroups());
 		registerCommand(new ModifyPermissions());
 		registerCommand(new RemoveMember());
 		registerCommand(new SetPassword());

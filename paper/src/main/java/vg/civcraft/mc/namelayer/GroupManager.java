@@ -11,6 +11,7 @@ import java.util.logging.Level;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitScheduler;
 import vg.civcraft.mc.namelayer.database.GroupManagerDao;
 import vg.civcraft.mc.namelayer.events.GroupCreateEvent;
 import vg.civcraft.mc.namelayer.events.GroupDeleteEvent;
@@ -107,7 +108,7 @@ public class GroupManager{
 		final String name = event.getGroupName();
 		final UUID owner = event.getOwner();
 		final String password = event.getPassword();
-		NameLayerPlugin.getBlackList().initEmptyBlackList(name);
+		NameLayerPlugin.getBlackList().initEmptyBlackList(group.getGroupId());
 		Bukkit.getScheduler().runTaskAsynchronously(NameLayerPlugin.getInstance(), new Runnable() {
 			@Override
 			public void run() {
@@ -151,19 +152,14 @@ public class GroupManager{
 		return id;
 	}
 	
-	public boolean deleteGroup(String groupName){
-		return deleteGroup(groupName,true);
+	public boolean deleteGroup(int groupId){
+		return deleteGroup(groupId,true);
 	}
 	
-	public boolean deleteGroup(String groupName, boolean savetodb){
-		if (groupName == null) {
-			NameLayerPlugin.getInstance().getLogger().log(Level.INFO, "Group delete failed, caller passed in null", new Exception());
-			return false;
-		}
-		groupName = groupName.toLowerCase();
-		Group group = getGroup(groupName);
+	public boolean deleteGroup(int groupId, boolean savetodb){
+		Group group = getGroup(groupId);
 		if (group == null) {
-			NameLayerPlugin.getInstance().getLogger().log(Level.INFO, "Group delete failed, failed to find group " + groupName);
+			NameLayerPlugin.getInstance().getLogger().log(Level.INFO, "Group delete failed, failed to find group " + groupId);
 			return false;
 		}
 		
@@ -171,16 +167,14 @@ public class GroupManager{
 		GroupDeleteEvent event = new GroupDeleteEvent(group, false);
 		Bukkit.getPluginManager().callEvent(event);
 		if (event.isCancelled()) {
-			NameLayerPlugin.getInstance().getLogger().log(Level.INFO, "Group delete was cancelled for "+ groupName);
+			NameLayerPlugin.getInstance().getLogger().log(Level.INFO, "Group delete was cancelled for "+ groupId);
 			return false;
 		}
 		// Unlinks subgroups.
 		group.prepareForDeletion();
 		deleteGroupPerms(group);
 		groupsByName.remove(group.getName());
-		for (int id : group.getGroupIds()) {
-			groupsById.remove(id);
-		}
+		groupsById.remove(group.getGroupId());
 		
 		// Call after actual delete to alert listeners that we're done.
 		event = new GroupDeleteEvent(group, true);
@@ -189,7 +183,7 @@ public class GroupManager{
 		group.setDisciplined(true);
 		group.setValid(false);
 		if (savetodb){
-			groupManagerDao.deleteGroup(groupName);
+			groupManagerDao.deleteGroup(groupId);
 		}
 		return true;
 	}
@@ -245,15 +239,11 @@ public class GroupManager{
 		Bukkit.getPluginManager().callEvent(event);
 
 		// Then invalidate. Updating the cache was proving unreliable; we'll address it later.
-		GroupManager.invalidateCache(group.getName());
-		GroupManager.invalidateCache(toMerge.getName());
+		GroupManager.invalidateCache(group.getGroupId());
+		GroupManager.invalidateCache(toMerge.getGroupId());
 	}
 
-	public void mergeGroup(Group group, Group to){
-		mergeGroup(group,to,true);
-	}
-	
-	public void mergeGroup(final Group group, final Group toMerge, boolean savetodb){
+	public void mergeGroup(final Group group, final Group toMerge){
 		if (group == null || toMerge == null) {
 			NameLayerPlugin.getInstance().getLogger().log(Level.INFO, "Group merge failed, caller passed in null", new Exception());
 			return;
@@ -268,52 +258,40 @@ public class GroupManager{
 					group.getName() + " and " + toMerge.getName());
 			return;
 		}
-		group.isValid();
-		group.setDisciplined(true, false);
-		toMerge.setDisciplined(true, false);
-		
-		if (savetodb){
-			// This basically just fires starting events and disciplines groups on target server.
-			// They then wait for merge to complete. Botched merges will lock groups, basically. :shrug:
 
-			NameLayerPlugin.getInstance().getServer().getScheduler().runTaskAsynchronously(
-					NameLayerPlugin.getInstance(), new Runnable(){
-
-				@Override
-				public void run() {
-					groupManagerDao.mergeGroup(group.getName(), toMerge.getName());
-					// At this point, at the DB level all non-overlap members are in target group, name is reset to target,
-					// unique group header record is removed, and faction_id all point to new name.
-
-					// We handle supergroup right here right now; does its own mercury message to update in cache.
-					if (toMerge.getSuperGroup() != null) {
-						Group sup = toMerge.getSuperGroup();
-						Group.unlink(sup, toMerge); 
-						// The above handles the need to unlink any supergroup from merge in DB.
+		BukkitScheduler sched = NameLayerPlugin.getInstance().getServer().getScheduler();
+		sched.runTaskAsynchronously(
+				NameLayerPlugin.getInstance(), () -> {
+					if (!groupManagerDao.mergeGroup(group.getGroupId(), toMerge.getGroupId()) ){
+						NameLayerPlugin.log(Level.WARNING, "Merging groups failed to execute SQL, rolling back merge. Groups: " +
+								group.getName() + " and " + toMerge.getName());
+						return;
 					}
 
-					// Subgroup update is handled in doneMerge, as its a cache-only update.
+					// At this point, at the DB level all non-overlap members are in target group, name is reset to target,
+					// unique group header record is removed, and faction_id all point to new name.
+					sched.runTask(NameLayerPlugin.getInstance(), () -> {
+						// We handle supergroup right here right now; does its own mercury message to update in cache.
+						if (toMerge.getSuperGroup() != null) {
+							Group sup = toMerge.getSuperGroup();
+							Group.unlink(sup, toMerge);
+							// The above handles the need to unlink any supergroup from merge in DB.
+						}
 
-					deleteGroupPerms(toMerge); // commit perm updates to DB.
+						// Subgroup update is handled in doneMerge, as its a cache-only update.
 
-					doneMergeGroup(group, toMerge);
-				}
-			});
-		}
+						deleteGroupPerms(toMerge); // commit perm updates to DB.
+
+						doneMergeGroup(group, toMerge);
+					});
+				});
 	}
 	
-	public static List<Group> getSubGroups(String name) {
-		if (name == null) {
-			NameLayerPlugin.getInstance().getLogger().log(Level.INFO, "Group getSubGroups event failed, caller passed in null", new Exception());
-			return new ArrayList<>();
-		}
-
-		List<Group> groups = groupManagerDao.getSubGroups(name);
+	public static List<Group> getSubGroups(int id) {
+		List<Group> groups = groupManagerDao.getSubGroups(id);
 		for (Group group : groups) {
 			groupsByName.put(group.getName().toLowerCase(), group);
-			for (int j : group.getGroupIds()){
-				groupsById.put(j, group);
-			}
+			groupsById.put(group.getGroupId(), group);
 		}
 		return groups;
 	}
@@ -335,9 +313,7 @@ public class GroupManager{
 			Group group = groupManagerDao.getGroup(name);
 			if (group != null) {
 				groupsByName.put(lower, group);
-				for (int j : group.getGroupIds()){
-					groupsById.put(j, group);
-				}
+				groupsById.put(group.getGroupId(), group);
 			} else {
 				NameLayerPlugin.getInstance().getLogger().log(Level.INFO, "getGroup by Name failed, unable to find the group " + name);
 			}
@@ -352,9 +328,7 @@ public class GroupManager{
 			Group group = groupManagerDao.getGroup(groupId);
 			if (group != null) {
 				groupsByName.put(group.getName().toLowerCase(), group);
-				for (int j : group.getGroupIds()){
-					groupsById.put(j, group);
-				}
+				groupsById.put(group.getGroupId(), group);
 			} else {
 				NameLayerPlugin.getInstance().getLogger().log(Level.INFO, "getGroup by ID failed, unable to find the group " + groupId);
 			}
@@ -393,9 +367,7 @@ public class GroupManager{
 			Group group = groupManagerDao.getGroup(name);
 			if (group != null) {
 				groupsByName.put(lower, group);
-				for (int j : group.getGroupIds()){
-					groupsById.put(j, group);
-				}
+				groupsById.put(group.getGroupId(), group);
 			} else {
 				group = groupManagerDao.getGroup(NameLayerPlugin.getSpecialAdminGroup());
 			}
@@ -508,27 +480,16 @@ public class GroupManager{
 	 * Invalidates a group from cache.
 	 * @param group the group to invalidate cache for
 	 */
-	public static void invalidateCache(String group){
-		if (group == null) {
-			NameLayerPlugin.getInstance().getLogger().log(Level.INFO, "invalidateCache failed, caller passed in null", new Exception());
-			return;
-		}
-
-		Group g = groupsByName.get(group.toLowerCase());
+	public static void invalidateCache(int group){
+		Group g = groupsById.get(group);
 		if (g != null) {
 			g.setValid(false);
-			List<Integer>k = g.getGroupIds();
-			groupsByName.remove(group.toLowerCase());
+			groupsByName.remove(g.getName());
 			NameLayerPlugin.getBlackList().removeFromCache(g.getName());
-			
-			boolean fail = true;
+
 			// You have a freaking hashmap, use it.
-			for (int j : k) {
-				if (groupsById.remove(j) != null) {
-					fail = false;
-				}
-			}
-			
+			boolean fail = groupsById.remove(g.getGroupId()) == null;
+
 			// FALLBACK is hardloop
 			if (fail) { // can't find ID or cache is wrong.
 				for (Group x: groupsById.values()) {

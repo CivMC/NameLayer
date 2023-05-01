@@ -146,8 +146,6 @@ public class NameLayerPlugin extends ACivMod {
 		if (loadGroups) {
 			groupManagerDao = new GroupManagerDao(getLogger(), db);
 			groupManagerDao.registerMigrations();
-			NameLayerPlugin.log(Level.INFO, "Removing any cycles...");
-			groupManagerDao.removeCycles();
 		}
 
 		long begin_time = System.currentTimeMillis();
