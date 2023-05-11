@@ -3,12 +3,8 @@ package vg.civcraft.mc.namelayer.group;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+
+import java.util.*;
 import java.util.logging.Level;
 import vg.civcraft.mc.namelayer.GroupManager;
 import vg.civcraft.mc.namelayer.GroupManager.PlayerType;
@@ -98,14 +94,36 @@ public class Group {
 	public List<UUID> getAllMembers() {
 		return Lists.newArrayList(players.keySet());
 	}
-	
+	/**
+	 * Returns all the uuids of the invitees in this group.
+	 * @return Returns all the uuids.
+	 */
+	public List<UUID> getAllInvites() {
+		return Lists.newArrayList(invites.keySet());
+	}
+
+	/**
+	 * Returns all the UUIDS of a group's PlayerType.
+	 * @param type- The PlayerType of a group that you want the UUIDs of.
+	 * @return Returns all the UUIDS of the specific PlayerType.
+	 */
+	public List<UUID> getAllInvites(PlayerType type) {
+		List<UUID> uuids = Lists.newArrayList();
+		for (Map.Entry<UUID, PlayerType> entry : invites.entrySet()) {
+			if (entry.getValue() == type) {
+				uuids.add(entry.getKey());
+			}
+		}
+		return uuids;
+	}
+
 	/**
 	 * Returns all the UUIDS of a group's PlayerType.
 	 * @param type- The PlayerType of a group that you want the UUIDs of.
 	 * @return Returns all the UUIDS of the specific PlayerType.
 	 */
 	public List<UUID> getAllMembers(PlayerType type) {
-		List<UUID> uuids = Lists.newArrayList();;
+		List<UUID> uuids = Lists.newArrayList();
 		for (Map.Entry<UUID, PlayerType> entry : players.entrySet()) {
 			if (entry.getValue() == type) {
 				uuids.add(entry.getKey());
@@ -253,7 +271,7 @@ public class Group {
 		}
 		return invites.get(uuid);
 	}
-	
+
 	/**
 	 * Removes the invite of a Player
 	 * @param uuid - The UUID of the player.
@@ -307,10 +325,25 @@ public class Group {
 	
 	/**
 	 * @param uuid- The UUID of the player.
-	 * @return Returns the PlayerType of a UUID.
+	 * @return Returns the PlayerType of a member UUID.
 	 */
 	public PlayerType getPlayerType(UUID uuid) {
 		PlayerType member = players.get(uuid);
+		if (member != null) {
+			return member;
+		}
+		if (NameLayerPlugin.getBlackList().isBlacklisted(this, uuid)) {
+			return null;
+		}
+		return PlayerType.NOT_BLACKLISTED;
+	}
+
+	/**
+	 * @param uuid- The UUID of the player.
+	 * @return Returns the PlayerType of an invited UUID.
+	 */
+	public PlayerType getPlayerInviteType(UUID uuid) {
+		PlayerType member = invites.get(uuid);
 		if (member != null) {
 			return member;
 		}
