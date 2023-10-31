@@ -81,11 +81,6 @@ public class MainGroupGUI extends AbstractGroupGUI {
 		}
 		ClickableInventory ci = new ClickableInventory(54, g.getName());
 		final List<Clickable> clicks = constructClickables();
-		if (clicks.size() < 45 * currentPage) {
-			// would show an empty page, so go to previous
-			currentPage--;
-			showScreen();
-		}
 		// fill gui
 		for (int i = 36 * currentPage; i < 36 * (currentPage + 1)
 				&& i < clicks.size(); i++) {
