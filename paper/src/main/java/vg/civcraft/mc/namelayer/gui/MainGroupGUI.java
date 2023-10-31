@@ -126,7 +126,9 @@ public class MainGroupGUI extends AbstractGroupGUI {
 
 		// options
 
-		ci.setSlot(getSuperMenuClickable(), 45);
+		if (currentPage == 0) {
+			ci.setSlot(getSuperMenuClickable(), 45);
+		}
 		ci.setSlot(createInheritedMemberToggle(), 46);
 		ci.setSlot(createInviteToggle(), 47);
 		ci.setSlot(setupMemberTypeToggle(PlayerType.MEMBERS, showMembers), 48);
