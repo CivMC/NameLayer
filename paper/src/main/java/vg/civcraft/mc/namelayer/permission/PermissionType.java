@@ -109,7 +109,7 @@ public class PermissionType {
 		//allows to add/remove owners
 		registerPermission("OWNER", new ArrayList<>(owner), "Allows inviting new owners and removing existing owners");
 		//allows to modify the permissions for different permissions groups
-		registerPermission("PERMS", new ArrayList<>(owner), "Allows modifying permissions for this group");
+		registerPermission("PERMS", new ArrayList<>(owner), "Allows modifying permissions for this group", Map.ofEntries(Map.entry("PERMS", PlayerType.OWNER)));
 		//allows deleting the group
 		registerPermission("DELETE", new ArrayList<>(owner), "Allows deleting this group");
 		//allows merging the group with another one
