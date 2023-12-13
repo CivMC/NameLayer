@@ -152,7 +152,7 @@ public class PermissionManageGUI extends AbstractGroupGUI {
 					}
 				}
 			}
-			if (pType == PlayerType.NOT_BLACKLISTED && !perm.getCanBeBlacklisted()) {
+			if (perm.getIsLocked(pType)) {
 				canEdit = false;
 
 				ItemUtils.addLore(
