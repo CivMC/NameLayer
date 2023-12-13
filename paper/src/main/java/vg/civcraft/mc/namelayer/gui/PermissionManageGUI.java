@@ -152,7 +152,7 @@ public class PermissionManageGUI extends AbstractGroupGUI {
 					}
 				}
 			}
-			if (!perm.getIsLocked(pType)) {
+			if (perm.getIsLocked(pType)) {
 				canEdit = false;
 
 				ItemUtils.addLore(

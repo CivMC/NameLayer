@@ -66,8 +66,8 @@ public class ModifyPermissions extends BaseCommandMiddle {
 		}
 		GroupPermission gPerm = gm.getPermissionforGroup(g);
 
-		if (playerType == PlayerType.NOT_BLACKLISTED && !pType.getCanBeBlacklisted()) {
-			sender.sendMessage(ChatColor.RED + "You can not change this permission for non-blacklisted players.");
+		if (pType.getIsLocked(playerType)) {
+			sender.sendMessage(ChatColor.RED + "You can not change this permission for %s".formatted(PlayerType.getNiceRankName(playerType)));
 			return;
 		}
 
