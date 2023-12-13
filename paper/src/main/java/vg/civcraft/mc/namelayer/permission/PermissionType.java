@@ -28,7 +28,7 @@ public class PermissionType {
 			int id = perm.getKey();
 			String name = perm.getValue();
 			maximumExistingId = Math.max(maximumExistingId, id);
-			internalRegisterPermission(id, name, new ArrayList<>(), null, true);
+			internalRegisterPermission(id, name, new ArrayList<>(), null, new HashMap<>());
 		}
 		registerNameLayerPermissions();
 	}
@@ -42,27 +42,27 @@ public class PermissionType {
 	}
 	
 	public static PermissionType registerPermission(String name, List<PlayerType> defaultPermLevels) {
-		return registerPermission(name, defaultPermLevels, null, true);
+		return registerPermission(name, defaultPermLevels, null, new HashMap<>());
 	}
 	
 	public static PermissionType registerPermission(String name, List <PlayerType> defaultPermLevels, String description) {
-		return registerPermission(name, defaultPermLevels, description, true);
+		return registerPermission(name, defaultPermLevels, description, new HashMap<>());
 	}
 	
-	public static PermissionType registerPermission(String name, List <PlayerType> defaultPermLevels, String description, boolean canBeBlacklisted) {
+	public static PermissionType registerPermission(String name, List <PlayerType> defaultPermLevels, String description, Map<String, PlayerType> locked) {
 		if (name == null ) {
 			Bukkit.getLogger().severe("Could not register permission, name was null");
 			return null;
 		}
 		PermissionType existing = permissionByName.get(name);
 		if (existing != null) {
-			existing.update(defaultPermLevels, description, canBeBlacklisted);
+			existing.update(defaultPermLevels, description, locked);
 			return existing;
 		}
 		//not in db yet
 		int id = maximumExistingId + 1;
 		maximumExistingId = id;
-		PermissionType perm = internalRegisterPermission(id, name, defaultPermLevels, description, canBeBlacklisted);
+		PermissionType perm = internalRegisterPermission(id, name, defaultPermLevels, description, locked);
 		NameLayerPlugin.getGroupManagerDao().registerPermission(perm);
 		if (!defaultPermLevels.isEmpty()) {
 			NameLayerPlugin.getGroupManagerDao().addNewDefaultPermission(defaultPermLevels, perm);
@@ -70,8 +70,8 @@ public class PermissionType {
 		return perm;
 	}
 
-	private static PermissionType internalRegisterPermission(int id, String name, List <PlayerType> defaultPermLevels, String description, boolean canBeBlackListed) {
-		PermissionType p = new PermissionType(name, id, defaultPermLevels, description, canBeBlackListed);
+	private static PermissionType internalRegisterPermission(int id, String name, List <PlayerType> defaultPermLevels, String description, Map<String, PlayerType> locked) {
+		PermissionType p = new PermissionType(name, id, defaultPermLevels, description, locked);
 		permissionByName.put(name, p);
 		permissionById.put(id, p);
 		return p;
@@ -127,14 +127,14 @@ public class PermissionType {
 	private List <PlayerType> defaultPermLevels;
 	private int id;
 	private String description;
-	private boolean canBeBlacklisted;
+	private Map<String, PlayerType> locked;
 
-	private PermissionType(String name, int id, List <PlayerType> defaultPermLevels, String description, boolean canBeBlacklisted) {
+	private PermissionType(String name, int id, List <PlayerType> defaultPermLevels, String description, Map<String, PlayerType> locked) {
 		this.name = name;
 		this.id = id;
 		this.defaultPermLevels = defaultPermLevels;
 		this.description = description;
-		this.canBeBlacklisted = canBeBlacklisted;
+		this.locked = locked;
 	}
 	
 	public String getName() {
@@ -155,13 +155,16 @@ public class PermissionType {
 
 
 	
-	public void update(List <PlayerType> defaultPermLevels, String description, boolean canBeBlacklisted) {
+	public void update(List <PlayerType> defaultPermLevels, String description, Map<String, PlayerType> locked) {
 		this.defaultPermLevels = defaultPermLevels;
 		this.description = description;
-		this.canBeBlacklisted = canBeBlacklisted;
+		this.locked = locked;
 	}
 	
-	public boolean getCanBeBlacklisted() {
-		return canBeBlacklisted;
-	}
+	public boolean getIsLocked(PlayerType playerType){
+		if(!this.locked.containsKey(this.name))
+			return false;
+
+        return this.locked.get(this.name).equals(playerType);
+    }
 }
